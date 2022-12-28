@@ -1,0 +1,12 @@
+[submodule "foonathan_memory_vendor"]
+	path = foonathan_memory_vendor
+	url = git@github.com:tiiuae/foonathan_memory_vendor.git
+[submodule "Fast-CDR"]
+	path = Fast-CDR
+	url = git@github.com:tiiuae/Fast-CDR.git
+[submodule "rosidl_typesupport_fastrtps"]
+	path = rosidl_typesupport_fastrtps
+	url = git@github.com:tiiuae/rosidl_typesupport_fastrtps.git
+[submodule "rmw_fastrtps"]
+	path = rmw_fastrtps
+	url = git@github.com:tiiuae/rmw_fastrtps.git
