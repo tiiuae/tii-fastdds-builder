@@ -1,0 +1,251 @@
+name: main
+
+on:
+  push:
+    # branches: [ tii_build_scripts_pkcs11_support-galactic ]
+
+jobs:
+  tii-deb-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ros2_distro: [ galactic ]
+    steps:
+      - name: Checkout rmw_fastrtps
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # Run docker build
+      - name: Run docker builder
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+        run: |
+          set -eux
+          mkdir bin
+          source build.sh
+          build_image $IMAGE_NAME latest $ROS_DISTRO
+
+      # Run docker build
+      - name: Run foonathan_memory_vendor docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: foonathan_memory_vendor
+          DEPENDENCIES: ""
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      # Run docker build
+      - name: Run Fast-CDR docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: Fast-CDR
+          DEPENDENCIES: ""
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run Fast-DDS docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: Fast-DDS
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run rosidl_typesupport_fastrtps/fastrtps_cmake_module docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rosidl_typesupport_fastrtps/fastrtps_cmake_module
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_cpp docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_cpp
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps \
+            ros-${{ matrix.ros2_distro }}-fastrtps-cmake-module"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_c docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_c
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps \
+            ros-${{ matrix.ros2_distro }}-fastrtps-cmake-module \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-cpp"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run rmw_fastrtps_shared_cpp docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rmw_fastrtps_shared_cpp
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps \
+            ros-${{ matrix.ros2_distro }}-fastrtps-cmake-module \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-cpp \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-c"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Run rmw_fastrtps_dynamic_cpp docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rmw_fastrtps_dynamic_cpp
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps \
+            ros-${{ matrix.ros2_distro }}-fastrtps-cmake-module \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-cpp \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-c \
+            ros-${{ matrix.ros2_distro }}-rmw-fastrtps-shared-cpp"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+      - name: Run rmw_fastrtps_cpp docker build
+        env:
+          ROS: 1
+          ROS_DISTRO: ${{ matrix.ros2_distro }}
+          IMAGE_NAME: tii_fastdds_builder
+          PACKAGE_NAME: rmw_fastrtps_cpp
+          DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
+            ros-${{ matrix.ros2_distro }}-fastcdr \
+            ros-${{ matrix.ros2_distro }}-fastrtps \
+            ros-${{ matrix.ros2_distro }}-fastrtps-cmake-module \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-cpp \
+            ros-${{ matrix.ros2_distro }}-rosidl-typesupport-fastrtps-c \
+            ros-${{ matrix.ros2_distro }}-rmw-fastrtps-shared-cpp"
+        run: |
+          set -eux
+          source build.sh
+          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
+
+      - name: Upload build
+        uses: actions/upload-artifact@v2
+        with:
+          name: fastdds_debs
+          path: bin/*.deb
+          retention-days: 14
+
+      # - uses: jfrog/setup-jfrog-cli@v2
+      #   env:
+      #     JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
+
+      # - name: Upload to Artifactory rmw-fastrtps-cpp
+      #   env:
+      #     ARTIFACTORY_REPO: debian-public-local
+      #     DISTRIBUTION: focal
+      #     COMPONENT: fog-sw-sros
+      #     ARCHITECTURE: amd64
+      #     BUILD_NAME: rmw-fastrtps-cpp
+      #     CI: true
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     set -exu
+      #     jfrog rt ping
+      #     pkg=$(find bin -name 'ros-${{ matrix.ros2_distro }}-rmw-fastrtps-cpp*.deb')
+      #     pkg_name=$(basename $pkg)
+      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
+      #                --target-props COMMIT="$GITHUB_SHA" \
+      #                --build-name "$BUILD_NAME" \
+      #                --build-number "$GITHUB_SHA" \
+      #                "$pkg" \
+      #                "$ARTIFACTORY_REPO/$pkg_name"
+      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
+      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
+      #                  --status dev \
+      #                  --comment "development build"
+
+      # - name: Upload to Artifactory rmw-fastrtps-dynamic-cpp
+      #   env:
+      #     ARTIFACTORY_REPO: debian-public-local
+      #     DISTRIBUTION: focal
+      #     COMPONENT: fog-sw-sros
+      #     ARCHITECTURE: amd64
+      #     BUILD_NAME: rmw-fastrtps-dynamic-cpp
+      #     CI: true
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     set -exu
+      #     jfrog rt ping
+      #     pkg=$(find bin -name 'ros-${{ matrix.ros2_distro }}-rmw-fastrtps-dynamic-cpp*.deb')
+      #     pkg_name=$(basename $pkg)
+      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
+      #                --target-props COMMIT="$GITHUB_SHA" \
+      #                --build-name "$BUILD_NAME" \
+      #                --build-number "$GITHUB_SHA" \
+      #                "$pkg" \
+      #                "$ARTIFACTORY_REPO/$pkg_name"
+      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
+      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
+      #                  --status dev \
+      #                  --comment "development build"
+
+      # - name: Upload to Artifactory rmw-fastrtps-shared-cpp
+      #   env:
+      #     ARTIFACTORY_REPO: debian-public-local
+      #     DISTRIBUTION: focal
+      #     COMPONENT: fog-sw-sros
+      #     ARCHITECTURE: amd64
+      #     BUILD_NAME: rmw-fastrtps-shared-cpp
+      #     CI: true
+      #   if: github.event_name == 'push'
+      #   run: |
+      #     set -exu
+      #     jfrog rt ping
+      #     pkg=$(find bin -name 'ros-${{ matrix.ros2_distro }}-rmw-fastrtps-shared-cpp*.deb')
+      #     pkg_name=$(basename $pkg)
+      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
+      #                --target-props COMMIT="$GITHUB_SHA" \
+      #                --build-name "$BUILD_NAME" \
+      #                --build-number "$GITHUB_SHA" \
+      #                "$pkg" \
+      #                "$ARTIFACTORY_REPO/$pkg_name"
+      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
+      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
+      #                  --status dev \
+      #                  --comment "development build"

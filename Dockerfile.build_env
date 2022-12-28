@@ -7,7 +7,7 @@ ARG GID=1000
 ARG BUILD_NUMBER
 ARG COMMIT_ID
 ARG GIT_VER
-ARG PACKAGE_NAME
+ARG IMAGE_NAME
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     curl \
@@ -20,6 +20,9 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     libp11-dev \
     libssl-dev \
     libtinyxml2-dev \
+    ros-${ROS_DISTRO}-osrf-testing-tools-cpp \
+    ros-${ROS_DISTRO}-performance-test-fixture \
+    ros-${ROS_DISTRO}-test-msgs \
     && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd -g $GID builder && \
@@ -27,27 +30,27 @@ RUN groupadd -g $GID builder && \
     usermod -aG sudo builder && \
     echo 'builder ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-RUN mkdir -p /$PACKAGE_NAME/packaging
+RUN mkdir -p /$IMAGE_NAME/packaging
 
-COPY packaging/rosdep.yaml* packaging/rosdep.sh packaging/build_deps.sh /$PACKAGE_NAME/packaging/
-COPY underlay.repos package.xml /$PACKAGE_NAME/packaging/
-COPY colcon.meta /$PACKAGE_NAME/packaging/
+COPY packaging/rosdep.yaml* packaging/rosdep.sh packaging/build_deps.sh /$IMAGE_NAME/packaging/
+# COPY underlay.repos package.xml /$IMAGE_NAME/packaging/
+# COPY colcon.meta /$IMAGE_NAME/packaging/
 
-RUN /$PACKAGE_NAME/packaging/rosdep.sh /$PACKAGE_NAME
+# RUN /$IMAGE_NAME/packaging/rosdep.sh /$IMAGE_NAME
 
-RUN chown -R builder:builder /$PACKAGE_NAME
+RUN chown -R builder:builder /$IMAGE_NAME
 
 USER builder
 
-RUN rosdep update
+RUN rosdep update --include-eol-distros
 
 USER root
-RUN apt purge -y \
-    ros-galactic-fastrtps \
-    ros-galactic-fastrtps-cmake-module
+# RUN apt purge -y \
+#     ros-galactic-fastrtps \
+#     ros-galactic-fastrtps-cmake-module
 USER builder
 
-# RUN /$PACKAGE_NAME/packaging/build_deps.sh /$PACKAGE_NAME
+# RUN /$IMAGE_NAME/packaging/build_deps.sh /$IMAGE_NAME
 
-VOLUME /$PACKAGE_NAME/sources
-WORKDIR /$PACKAGE_NAME/sources
+VOLUME /$IMAGE_NAME/sources
+WORKDIR /$IMAGE_NAME/sources

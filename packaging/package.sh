@@ -35,8 +35,9 @@ distr=""
 version=""
 git_commit_hash=""
 git_version_string=""
+dependencies=""
 
-while getopts "hb:d:g:v:" opt
+while getopts "hb:d:g:v:t:" opt
 do
 	case $opt in
 		h)
@@ -53,6 +54,9 @@ do
 			;;
 		v)
 			check_arg $OPTARG && git_version_string=$OPTARG || error_arg $opt
+			;;
+		t)
+			check_arg $OPTARG && dependencies=$OPTARG || error_arg $opt
 			;;
 		\?)
 			usage
@@ -71,14 +75,11 @@ fi
 mod_dir=$(echo $mod_dir | sed 's/\/$//')
 
 ## Debug prints
-echo 
-echo "[INFO] mod_dir: ${mod_dir}."
 echo "[INFO] build_nbr: ${build_nbr}."
 echo "[INFO] distr: ${distr}."
 echo "[INFO] git_commit_hash: ${git_commit_hash}."
 echo "[INFO] git_version_string: ${git_version_string}."
-
-cd $mod_dir
+echo "[INFO] Dependencies: ${dependencies}."
 
 ## Generate package
 echo "[INFO] Creating deb package..."
@@ -99,7 +100,16 @@ echo "[INFO] Version: ${version}."
 ### Run build_deps.sh script to check if dependencies are satisfied.
 ### If not, get them with underlay.repos and build them inside deps_ws
 #${mod_dir}/packaging/build_deps.sh ${mod_dir}
-
+if [ -e ${mod_dir}/bin ]; then
+	# Install any available debian packages
+	for dependency in ${dependencies[@]}; do
+		echo "Looking to directory ${mod_dir}/bin/${dependency}_*.deb"
+		if [ -e ${mod_dir}/bin/${dependency}_*.deb ]; then
+			echo "[INFO] Installing $dependency"
+			sudo dpkg -i ${mod_dir}/bin/${dependency}_*.deb
+		fi
+	done
+fi
 
 if [ -e ${mod_dir}/ros2_ws ]; then
 	# From fog-sw repo.
@@ -125,7 +135,7 @@ bloom-generate rosdebian --os-name ubuntu --os-version focal --ros-distro ${ROS_
 
 echo "[INFO] Clean up."
 
-rm -rf deps_ws obj-x86_64-linux-gnu debian
+rm -rf ${mod_dir}/deps_ws ${mod_dir}/.obj-x86_64-linux-gnu debian
 
 if [ -e ${mod_dir}/debian_bak ]; then
 	cp -r debian_bak debian
@@ -134,7 +144,7 @@ fi
 
 
 echo "[INFO] Move debian packages to volume."
-mv ${mod_dir}/../*.deb ${mod_dir}
+mv ${mod_dir}/*.deb ${mod_dir}/sources
 
 echo "[INFO] Done."
 exit 0

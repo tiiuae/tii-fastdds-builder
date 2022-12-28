@@ -10,3 +10,6 @@
 [submodule "rmw_fastrtps"]
 	path = rmw_fastrtps
 	url = git@github.com:tiiuae/rmw_fastrtps.git
+[submodule "Fast-DDS"]
+	path = Fast-DDS
+	url = git@github.com:tiiuae/Fast-DDS.git
