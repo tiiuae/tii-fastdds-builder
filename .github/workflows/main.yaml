@@ -112,12 +112,12 @@ jobs:
           source build.sh
           build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
 
-      - name: Run rmw_fastrtps_shared_cpp docker build
+      - name: Run rmw_fastrtps/rmw_fastrtps_shared_cpp docker build
         env:
           ROS: 1
           ROS_DISTRO: ${{ matrix.ros2_distro }}
           IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps_shared_cpp
+          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_shared_cpp
           DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
             ros-${{ matrix.ros2_distro }}-fastcdr \
             ros-${{ matrix.ros2_distro }}-fastrtps \
@@ -129,12 +129,12 @@ jobs:
           source build.sh
           build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
 
-      - name: Run rmw_fastrtps_dynamic_cpp docker build
+      - name: Run rmw_fastrtps/rmw_fastrtps_dynamic_cpp docker build
         env:
           ROS: 1
           ROS_DISTRO: ${{ matrix.ros2_distro }}
           IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps_dynamic_cpp
+          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_dynamic_cpp
           DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
             ros-${{ matrix.ros2_distro }}-fastcdr \
             ros-${{ matrix.ros2_distro }}-fastrtps \
@@ -146,12 +146,12 @@ jobs:
           set -eux
           source build.sh
           build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-      - name: Run rmw_fastrtps_cpp docker build
+      - name: Run rmw_fastrtps/rmw_fastrtps_cpp docker build
         env:
           ROS: 1
           ROS_DISTRO: ${{ matrix.ros2_distro }}
           IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps_cpp
+          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_cpp
           DEPENDENCIES: "ros-${{ matrix.ros2_distro }}-foonathan-memory-vendor \
             ros-${{ matrix.ros2_distro }}-fastcdr \
             ros-${{ matrix.ros2_distro }}-fastrtps \
