@@ -11,7 +11,7 @@ git_version_string=${3:-$(git log --date=format:%Y%m%d --pretty=~git%cd.%h -n 1)
 
 build_number=${GITHUB_RUN_NUMBER:=0}
 
-ros_distro=${ROS_DISTRO:=galactic}
+ros_distro=${ROS_DISTRO:=humble}
 
 iname=${IMAGE_NAME:=tii_fastdds_builder}
 
@@ -41,6 +41,9 @@ function build_package {
     local git_commit_hash=${5:-$(git rev-parse HEAD)}
     local git_version_string=${6:-$(git log --date=format:%Y%m%d --pretty=~git%cd.%h -n 1)}
   popd
+  if [ -e packaging/module_specific_files/${package_path} ]; then
+    /bin/cp -rf packaging/module_specific_files/${package_path}/* ${package_path}
+  fi
   docker run \
     --rm \
     -v $(pwd)/${package_path}:/${iname}/sources \

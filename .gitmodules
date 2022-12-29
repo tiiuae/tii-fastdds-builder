@@ -1,15 +1,15 @@
 [submodule "foonathan_memory_vendor"]
 	path = foonathan_memory_vendor
-	url = git@github.com:tiiuae/foonathan_memory_vendor.git
+	url = git@github.com:eProsima/foonathan_memory_vendor.git
 [submodule "Fast-CDR"]
 	path = Fast-CDR
-	url = git@github.com:tiiuae/Fast-CDR.git
+	url = git@github.com:eProsima/Fast-CDR.git
 [submodule "rosidl_typesupport_fastrtps"]
 	path = rosidl_typesupport_fastrtps
-	url = git@github.com:tiiuae/rosidl_typesupport_fastrtps.git
+	url = git@github.com:ros2/rosidl_typesupport_fastrtps.git
 [submodule "rmw_fastrtps"]
 	path = rmw_fastrtps
-	url = git@github.com:tiiuae/rmw_fastrtps.git
+	url = git@github.com:eProsima/rmw_fastrtps.git
 [submodule "Fast-DDS"]
 	path = Fast-DDS
-	url = git@github.com:tiiuae/Fast-DDS.git
+	url = git@github.com:eProsima/Fast-DDS.git

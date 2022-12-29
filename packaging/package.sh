@@ -97,9 +97,6 @@ echo "[INFO] Version: ${version}."
 #* commit: ${git_commit_hash}
 #EOF_CHANGELOG
 
-### Run build_deps.sh script to check if dependencies are satisfied.
-### If not, get them with underlay.repos and build them inside deps_ws
-#${mod_dir}/packaging/build_deps.sh ${mod_dir}
 if [ -e ${mod_dir}/bin ]; then
 	# Install any available debian packages
 	for dependency in ${dependencies[@]}; do
@@ -111,23 +108,15 @@ if [ -e ${mod_dir}/bin ]; then
 	done
 fi
 
-if [ -e ${mod_dir}/ros2_ws ]; then
-	# From fog-sw repo.
-	source ${mod_dir}/ros2_ws/install/setup.bash
-fi
-if [ -e ${mod_dir}/../deps_ws ]; then
-	source ${mod_dir}/../deps_ws/install/setup.bash
-fi
-
 if [ -e ${mod_dir}/debian ]; then
 	cp -r debian debian_bak
 fi
 
-bloom-generate rosdebian --os-name ubuntu --os-version focal --ros-distro ${ROS_DISTRO} --place-template-files \
+bloom-generate rosdebian --os-name ubuntu --os-version jammy --ros-distro ${ROS_DISTRO} --place-template-files \
     && sed -i 's/^export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG/export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG -DSECURITY=ON/g' debian/rules.em \
     && sed -i "s/@(DebianInc)@(Distribution)/@(DebianInc)/" debian/changelog.em \
     && [ ! "$distr" = "" ] && sed -i "s/@(Distribution)/${distr}/" debian/changelog.em || : \
-    && bloom-generate rosdebian --os-name ubuntu --os-version focal --ros-distro ${ROS_DISTRO} --process-template-files -i ${build_nbr}${git_version_string} \
+    && bloom-generate rosdebian --os-name ubuntu --os-version jammy --ros-distro ${ROS_DISTRO} --process-template-files -i ${build_nbr}${git_version_string} \
     && sed -i 's/^\tdh_shlibdeps.*/& --dpkg-shlibdeps-params=--ignore-missing-info/g' debian/rules \
     && sed -i "s/\=\([0-9]*\.[0-9]*\.[0-9]*\*\)//g" debian/control \
     && fakeroot debian/rules clean \
@@ -135,7 +124,7 @@ bloom-generate rosdebian --os-name ubuntu --os-version focal --ros-distro ${ROS_
 
 echo "[INFO] Clean up."
 
-rm -rf ${mod_dir}/deps_ws ${mod_dir}/.obj-x86_64-linux-gnu debian
+rm -rf ${mod_dir}/sources/.obj-x86_64-linux-gnu debian
 
 if [ -e ${mod_dir}/debian_bak ]; then
 	cp -r debian_bak debian
