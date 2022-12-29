@@ -6,17 +6,17 @@ on:
   pull_request:
     branches: [ humble ]
 
+env:
+  ROS_DISTRO: humble
+
 jobs:
   tii-deb-build:
     runs-on: ubuntu-latest
-    env:
-      ROS_DISTRO: humble
     steps:
       - name: Checkout rmw_fastrtps
         uses: actions/checkout@v2
         with:
           submodules: recursive
-
       # Run docker build
       - name: Run docker builder
         env:
@@ -171,81 +171,50 @@ jobs:
           path: bin/*.deb
           retention-days: 14
 
-      # - uses: jfrog/setup-jfrog-cli@v2
-      #   env:
-      #     JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
+  artifactory:
+    runs-on: ubuntu-latest
+    needs: tii-deb-build
+    if: github.event_name == 'push'
+    strategy:
+      matrix:
+        package: [
+          foonathan_memory_vendor, fastcdr, fastrtps,
+          fastrtps_cmake_module, rosidl_typesupport_fastrtps_c, rosidl_typesupport_fastrtps_cpp,
+          rmw_fastrtps_cpp, rmw_fastrtps_dynamic_cpp, rmw_fastrtps_shared_cpp
+        ]
 
-      # - name: Upload to Artifactory rmw-fastrtps-cpp
-      #   env:
-      #     ARTIFACTORY_REPO: debian-public-local
-      #     DISTRIBUTION: focal
-      #     COMPONENT: fog-sw-sros
-      #     ARCHITECTURE: amd64
-      #     BUILD_NAME: rmw-fastrtps-cpp
-      #     CI: true
-      #   if: github.event_name == 'push'
-      #   run: |
-      #     set -exu
-      #     jfrog rt ping
-      #     pkg=$(find bin -name 'ros-${{env.ROS_DISTRO}}-rmw-fastrtps-cpp*.deb')
-      #     pkg_name=$(basename $pkg)
-      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
-      #                --target-props COMMIT="$GITHUB_SHA" \
-      #                --build-name "$BUILD_NAME" \
-      #                --build-number "$GITHUB_SHA" \
-      #                "$pkg" \
-      #                "$ARTIFACTORY_REPO/$pkg_name"
-      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
-      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
-      #                  --status dev \
-      #                  --comment "development build"
-
-      # - name: Upload to Artifactory rmw-fastrtps-dynamic-cpp
-      #   env:
-      #     ARTIFACTORY_REPO: debian-public-local
-      #     DISTRIBUTION: focal
-      #     COMPONENT: fog-sw-sros
-      #     ARCHITECTURE: amd64
-      #     BUILD_NAME: rmw-fastrtps-dynamic-cpp
-      #     CI: true
-      #   if: github.event_name == 'push'
-      #   run: |
-      #     set -exu
-      #     jfrog rt ping
-      #     pkg=$(find bin -name 'ros-${{env.ROS_DISTRO}}-rmw-fastrtps-dynamic-cpp*.deb')
-      #     pkg_name=$(basename $pkg)
-      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
-      #                --target-props COMMIT="$GITHUB_SHA" \
-      #                --build-name "$BUILD_NAME" \
-      #                --build-number "$GITHUB_SHA" \
-      #                "$pkg" \
-      #                "$ARTIFACTORY_REPO/$pkg_name"
-      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
-      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
-      #                  --status dev \
-      #                  --comment "development build"
-
-      # - name: Upload to Artifactory rmw-fastrtps-shared-cpp
-      #   env:
-      #     ARTIFACTORY_REPO: debian-public-local
-      #     DISTRIBUTION: focal
-      #     COMPONENT: fog-sw-sros
-      #     ARCHITECTURE: amd64
-      #     BUILD_NAME: rmw-fastrtps-shared-cpp
-      #     CI: true
-      #   if: github.event_name == 'push'
-      #   run: |
-      #     set -exu
-      #     jfrog rt ping
-      #     pkg=$(find bin -name 'ros-${{env.ROS_DISTRO}}-rmw-fastrtps-shared-cpp*.deb')
-      #     pkg_name=$(basename $pkg)
-      #     jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
-      #                --target-props COMMIT="$GITHUB_SHA" \
-      #                --build-name "$BUILD_NAME" \
-      #                --build-number "$GITHUB_SHA" \
-      #                "$pkg" \
-      #                "$ARTIFACTORY_REPO/$pkg_name"
-      #     jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
-      #     jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
-      #                  --status dev \
-      #                  --comment "development build"
+    # if: github.event_name == 'push'
+    steps:
+      - name: Download builds
+        uses: actions/download-artifact@v2
+        with:
+          name: fastdds_debs
+          path: bin/
+      - uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
+      - name: Upload to Artifactory
+        env:
+          ARTIFACTORY_REPO: ssrc-deb-public-local
+          DISTRIBUTION: jammy
+          COMPONENT: fog-sw-sros
+          ARCHITECTURE: amd64
+          BUILD_NAME: ${{ matrix.package }}
+          CI: true
+        run: |
+          set -exu
+          deb_pkg_name=$(echo ${{ matrix.package }} | tr _ -)
+          pkg=$(find bin -name "ros-${{env.ROS_DISTRO}}-${deb_pkg_name}_*.deb")
+          if [ "${pkg}" == "" ]; then echo "ERROR: Package not found."; exit 1; fi
+          pkg_name=$(basename ${pkg})
+          jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
+                     --target-props COMMIT="$GITHUB_SHA" \
+                     --build-name "$BUILD_NAME" \
+                     --build-number "$GITHUB_SHA" \
+                     "$pkg" \
+                     "$ARTIFACTORY_REPO/$pkg_name"
+          jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
+          jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
+                       --status dev \
+                       --comment "development build"
+                       --comment "development build"
