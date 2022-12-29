@@ -217,4 +217,3 @@ jobs:
           jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
                        --status dev \
                        --comment "development build"
-                       --comment "development build"
