@@ -186,7 +186,7 @@ jobs:
   docker_image:
     runs-on: ubuntu-latest
     needs: tii-deb-build
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.push_to_docker) }}
+    if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_to_docker))
     steps:
       - name: Checkout rmw_fastrtps
         uses: actions/checkout@v2
@@ -229,7 +229,7 @@ jobs:
   artifactory:
     runs-on: ubuntu-latest
     needs: tii-deb-build
-    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.push_to_artifactory == 'true') }}
+    if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_to_artifactory))
     strategy:
       matrix:
         package: [
@@ -237,8 +237,6 @@ jobs:
           fastrtps_cmake_module, rosidl_typesupport_fastrtps_c, rosidl_typesupport_fastrtps_cpp,
           rmw_fastrtps_cpp, rmw_fastrtps_dynamic_cpp, rmw_fastrtps_shared_cpp
         ]
-
-    # if: github.event_name == 'push'
     steps:
       - name: Download builds
         uses: actions/download-artifact@v2
