@@ -32,7 +32,7 @@
 build
 log
 install
-bin
+bin*
 
 # Visual Studio Code files
 .vscode
@@ -43,6 +43,7 @@ bin
 .pydevproject
 
 # Python artifacts
+*__pycache__/
 __pycache__/
 *.py[cod]
 
