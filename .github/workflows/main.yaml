@@ -252,7 +252,7 @@ jobs:
           DISTRIBUTION: jammy
           COMPONENT: fog-sw-sros
           ARCHITECTURE: amd64
-          BUILD_NAME: ${{ matrix.package }}
+          BUILD_NAME: fastdds_libraries
           CI: true
         run: |
           set -exu
