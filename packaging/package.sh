@@ -116,7 +116,7 @@ export DEB_BUILD_OPTIONS="parallel=`nproc` nocheck"
 
 bloom-generate rosdebian --os-name ubuntu --os-version jammy --ros-distro ${ROS_DISTRO} --place-template-files \
     && sed -i 's/^export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG/export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG -DSECURITY=ON/g' debian/rules.em \
-    && sed -i 's/^\t\t$(BUILD_TESTING_ARG)/\t\t$(BUILD_TESTING_ARG) \\\n\t\t-DINSTALL_EXAMPLES=OFF \\\n\t\t-DSECURITY=ON/g' debian/rules.em \
+    && sed -i 's/^\t\t$(BUILD_TESTING_ARG)/\t\t$(BUILD_TESTING_ARG) \\\n\t\t-DINSTALL_EXAMPLES=OFF \\\n\t\t-DSECURITY=ON \\\n\t\t-DCMAKE_BUILD_TYPE=Release/g' debian/rules.em \
     && sed -i "s/@(DebianInc)@(Distribution)/@(DebianInc)/" debian/changelog.em \
     && [ ! "$distr" = "" ] && sed -i "s/@(Distribution)/${distr}/" debian/changelog.em || : \
     && bloom-generate rosdebian --os-name ubuntu --os-version jammy --ros-distro ${ROS_DISTRO} --process-template-files -i ${build_nbr}${git_version_string} \
