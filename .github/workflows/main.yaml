@@ -246,7 +246,13 @@ jobs:
       - uses: jfrog/setup-jfrog-cli@v2
         env:
           JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
+      - name: upload deb packages container-arch
+        uses: tiiuae/drone-yocto-deb-uploader@v1
+        with:
+          FILE: 'ros-${{env.ROS_DISTRO}}-${{ matrix.package }}_*.deb'
+          DIR: 'bin'
       - name: Upload to Artifactory
+        if: false
         env:
           ARTIFACTORY_REPO: ssrc-deb-public-local
           DISTRIBUTION: jammy
