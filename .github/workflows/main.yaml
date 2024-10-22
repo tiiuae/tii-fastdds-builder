@@ -32,7 +32,10 @@ jobs:
         run: |
           set -eux
           mkdir bin
+          git config --global user.email "ci@ci.ci"
+          git config --global user.name "ci"
           PLATFORM=linux/amd64 ./build.sh ./bin/
+
       # Run docker build
       # - name: Run foonathan_memory_vendor docker build
       #   env:
@@ -185,7 +188,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download builds
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: fastdds_debs
           path: bin/

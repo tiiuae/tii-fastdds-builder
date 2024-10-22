@@ -87,16 +87,6 @@ function build_package {
     /bin/cp -rf packaging/module_specific_files/${package_path}/* ${package_path}
   fi
 
-  if [ -e packaging/module_specific_patches/${package_path} ]; then
-    # /bin/cp -rf packaging/module_specific_patches/${package_path}/* ${package_path}
-    for patch in packaging/module_specific_patches/${package_path}/*.patch; do
-      pushd ${package_path}/..
-        pwd
-        echo "Applying patch ${patch}"
-        git am "../$patch"
-      popd
-    done
-  fi
   docker run \
     ${platform_arg} \
     --rm \
