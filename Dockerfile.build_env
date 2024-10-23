@@ -51,7 +51,7 @@ USER root
 #     ros-${ROS_DISTRO}-foonathan-memory-vendor
 RUN dpkg -r --force-depends ros-${ROS_DISTRO}-foonathan-memory-vendor
 
-USER builder
+# USER builder
 
 # RUN /$IMAGE_NAME/packaging/build_deps.sh /$IMAGE_NAME
 

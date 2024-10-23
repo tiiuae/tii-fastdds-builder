@@ -12,6 +12,7 @@ Params:
     -d  Distribution string in debian changelog.
     -g  Git commit hash.
     -v  Git version string
+    -o  Output dir
 "
 	exit 0
 }
@@ -36,8 +37,9 @@ version=""
 git_commit_hash=""
 git_version_string=""
 dependencies=""
+output_dir="bin/"
 
-while getopts "hb:d:g:v:t:" opt
+while getopts "hb:d:g:v:t:o:" opt
 do
 	case $opt in
 		h)
@@ -57,6 +59,9 @@ do
 			;;
 		t)
 			check_arg $OPTARG && dependencies=$OPTARG || error_arg $opt
+			;;
+		o)
+			check_arg $OPTARG && output_dir=$OPTARG || error_arg $opt
 			;;
 		\?)
 			usage
@@ -89,7 +94,6 @@ echo "[INFO] Creating deb package..."
 version=$(grep "<version>" package.xml | sed 's/[^>]*>\([^<"]*\).*/\1/')
 
 echo "[INFO] Version: ${version}."
-
 #title="$version ($(date +%Y-%m-%d))"
 #cat << EOF_CHANGELOG > CHANGELOG.rst
 #$title
@@ -97,13 +101,14 @@ echo "[INFO] Version: ${version}."
 #* commit: ${git_commit_hash}
 #EOF_CHANGELOG
 
-if [ -e ${mod_dir}/bin ]; then
+if [ -e ${mod_dir}/${output_dir} ]; then
 	# Install any available debian packages
 	for dependency in ${dependencies[@]}; do
-		echo "Looking to directory ${mod_dir}/bin/${dependency}_*.deb"
-		if [ -e ${mod_dir}/bin/${dependency}_*.deb ]; then
+		echo "Looking to directory ${mod_dir}/${output_dir}/${dependency}_*.deb"
+		ls -la ${mod_dir}/${output_dir}/${dependency}_*.deb
+		if [ -e ${mod_dir}/${output_dir}/${dependency}_*.deb ]; then
 			echo "[INFO] Installing $dependency"
-			sudo dpkg -i ${mod_dir}/bin/${dependency}_*.deb
+			dpkg -i ${mod_dir}/${output_dir}/${dependency}_*.deb
 		fi
 	done
 fi
@@ -126,17 +131,19 @@ bloom-generate rosdebian --os-name ubuntu --os-version jammy --ros-distro ${ROS_
     && fakeroot debian/rules "binary --parallel" || exit 1
 
 echo "[INFO] Clean up."
+ls -la  ${mod_dir}/sources
 
-rm -rf ${mod_dir}/sources/.obj-x86_64-linux-gnu debian
+
+rm -rf ${mod_dir}/sources/.obj-* debian
 
 if [ -e ${mod_dir}/debian_bak ]; then
 	cp -r debian_bak debian
 	rm -rf debian_bak
 fi
-
+ls -la ${mod_dir}
 
 echo "[INFO] Move debian packages to volume."
-mv ${mod_dir}/*.deb ${mod_dir}/sources
+mv ${mod_dir}/*deb ${mod_dir}/sources
 
 echo "[INFO] Done."
 exit 0

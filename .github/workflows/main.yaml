@@ -3,20 +3,21 @@ name: humble-build
 on:
   push:
     branches: [ humble ]
+    paths-ignore:
+      - 'README.md'
   pull_request:
     branches: [ humble ]
   workflow_dispatch:
     inputs:
-      push_to_artifactory:
-        description: 'Push packages to artifactory?'
-        required: true
-        default: false
-        type: boolean
       push_to_docker:
         description: 'Push packages to docker image?'
         required: true
         default: true
         type: boolean
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   ROS_DISTRO: humble
@@ -24,249 +25,97 @@ env:
 jobs:
   tii-deb-build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture: [amd64, arm64]
     steps:
       - name: Checkout rmw_fastrtps
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      # Run docker build
-      - name: Run docker builder
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.architecture }}
+
+      - name: Run deb package build
         env:
           ROS: 1
           IMAGE_NAME: tii_fastdds_builder
         run: |
           set -eux
           mkdir bin
-          source build.sh
-          build_image $IMAGE_NAME latest ${{env.ROS_DISTRO}}
+          git config --global user.email "ci@ci.ci"
+          git config --global user.name "ci"
+          PLATFORM=linux/${{ matrix.architecture }} ./build.sh ./bin/
 
-      # Run docker build
-      - name: Run foonathan_memory_vendor docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: foonathan_memory_vendor
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: ""
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      # Run docker build
-      - name: Run Fast-CDR docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: Fast-CDR
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: ""
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run Fast-DDS docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: Fast-DDS
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run rosidl_typesupport_fastrtps/fastrtps_cmake_module docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rosidl_typesupport_fastrtps/fastrtps_cmake_module
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_cpp docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_cpp
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps \
-            ros-${{env.ROS_DISTRO}}-fastrtps-cmake-module"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_c docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rosidl_typesupport_fastrtps/rosidl_typesupport_fastrtps_c
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps \
-            ros-${{env.ROS_DISTRO}}-fastrtps-cmake-module \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-cpp"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run rmw_fastrtps/rmw_fastrtps_shared_cpp docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_shared_cpp
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps \
-            ros-${{env.ROS_DISTRO}}-fastrtps-cmake-module \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-cpp \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-c"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Run rmw_fastrtps/rmw_fastrtps_dynamic_cpp docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_dynamic_cpp
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps \
-            ros-${{env.ROS_DISTRO}}-fastrtps-cmake-module \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-cpp \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-c \
-            ros-${{env.ROS_DISTRO}}-rmw-fastrtps-shared-cpp"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-      - name: Run rmw_fastrtps/rmw_fastrtps_cpp docker build
-        env:
-          ROS: 1
-          IMAGE_NAME: tii_fastdds_builder
-          PACKAGE_NAME: rmw_fastrtps/rmw_fastrtps_cpp
-          ROS_DISTRO: ${{env.ROS_DISTRO}}
-          DEPENDENCIES: "ros-${{env.ROS_DISTRO}}-foonathan-memory-vendor \
-            ros-${{env.ROS_DISTRO}}-fastcdr \
-            ros-${{env.ROS_DISTRO}}-fastrtps \
-            ros-${{env.ROS_DISTRO}}-fastrtps-cmake-module \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-cpp \
-            ros-${{env.ROS_DISTRO}}-rosidl-typesupport-fastrtps-c \
-            ros-${{env.ROS_DISTRO}}-rmw-fastrtps-shared-cpp"
-        run: |
-          set -eux
-          source build.sh
-          build_package $IMAGE_NAME latest $PACKAGE_NAME "$DEPENDENCIES"
-
-      - name: Upload build
-        uses: actions/upload-artifact@v2
-        with:
-          name: fastdds_debs
-          path: bin/*.deb
-          retention-days: 14
-
-  docker_image:
-    runs-on: ubuntu-latest
-    needs: tii-deb-build
-    if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_to_docker))
-    steps:
-      - name: Checkout rmw_fastrtps
-        uses: actions/checkout@v2
-
-      - name: Download builds
-        uses: actions/download-artifact@v2
-        with:
-          name: fastdds_debs
-          path: bin/
-
-      - uses: docker/setup-buildx-action@v1
+      - uses: docker/setup-buildx-action@v3
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v5
         with:
           images: ghcr.io/tiiuae/tii-fastdds-artifacts
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=sha
+            type=ref,event=branch,suffix=-${{ matrix.architecture }}
+            type=ref,event=pr,suffix=-${{ matrix.architecture }}
+            type=semver,pattern={{version}},suffix=-${{ matrix.architecture }}
+            type=sha,suffix=-${{ matrix.architecture }}
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build px4-sitl-gazebo-artifacts image and push
-        uses: docker/build-push-action@v2
+      - name: Build tii-fastdds-artifacts image and push
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          platforms: linux/${{ matrix.architecture }}
           file: ./Dockerfile.deb_packages
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
 
-  artifactory:
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: fastdds_debs_${{ matrix.architecture }}
+          path: bin/*.deb
+          retention-days: 14
+
+  merge_images:
     runs-on: ubuntu-latest
     needs: tii-deb-build
-    if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_to_artifactory))
-    strategy:
-      matrix:
-        package: [
-          foonathan_memory_vendor, fastcdr, fastrtps,
-          fastrtps_cmake_module, rosidl_typesupport_fastrtps_c, rosidl_typesupport_fastrtps_cpp,
-          rmw_fastrtps_cpp, rmw_fastrtps_dynamic_cpp, rmw_fastrtps_shared_cpp
-        ]
+    if: (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.push_to_docker))
     steps:
-      - name: Download builds
-        uses: actions/download-artifact@v2
+      - name: Checkout rmw_fastrtps
+        uses: actions/checkout@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          name: fastdds_debs
-          path: bin/
-      - uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
-      - name: Upload to Artifactory
-        env:
-          ARTIFACTORY_REPO: ssrc-deb-public-local
-          DISTRIBUTION: jammy
-          COMPONENT: fog-sw-sros
-          ARCHITECTURE: amd64
-          BUILD_NAME: fastdds_libraries
-          CI: true
-        run: |
-          set -exu
-          deb_pkg_name=$(echo ${{ matrix.package }} | tr _ -)
-          pkg=$(find bin -name "ros-${{env.ROS_DISTRO}}-${deb_pkg_name}_*.deb")
-          if [ "${pkg}" == "" ]; then echo "ERROR: Package not found."; exit 1; fi
-          pkg_name=$(basename ${pkg})
-          jfrog rt u --deb "$DISTRIBUTION/$COMPONENT/$ARCHITECTURE" \
-                     --target-props COMMIT="$GITHUB_SHA" \
-                     --build-name "$BUILD_NAME" \
-                     --build-number "$GITHUB_SHA" \
-                     "$pkg" \
-                     "$ARTIFACTORY_REPO/$pkg_name"
-          jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
-          jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_REPO" \
-                       --status dev \
-                       --comment "development build"
+          images: ghcr.io/tiiuae/tii-fastdds-artifacts
+          tags: |
+            type=sha
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create combined image
+        run : |
+            echo "Debug: Tags are ${{ steps.meta.outputs.tags }}"
+            docker manifest create $(echo "${{ steps.meta.outputs.tags }}" | head -1) \
+            $(echo "${{ steps.meta.outputs.tags }}" | head -1)-amd64 \
+            $(echo "${{ steps.meta.outputs.tags }}" | head -1)-arm64
+            docker manifest push $(echo "${{ steps.meta.outputs.tags }}" | head -1)
