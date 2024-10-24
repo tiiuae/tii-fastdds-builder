@@ -103,6 +103,9 @@ jobs:
         with:
           images: ghcr.io/tiiuae/tii-fastdds-artifacts
           tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
             type=sha
       
       - name: Login to GitHub Container Registry
@@ -112,10 +115,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create combined image
-        run : |
-            echo "Debug: Tags are ${{ steps.meta.outputs.tags }}"
-            docker manifest create $(echo "${{ steps.meta.outputs.tags }}" | head -1) \
-            $(echo "${{ steps.meta.outputs.tags }}" | head -1)-amd64 \
-            $(echo "${{ steps.meta.outputs.tags }}" | head -1)-arm64
-            docker manifest push $(echo "${{ steps.meta.outputs.tags }}" | head -1)
+      - name: Create combined image manifests
+        run: |
+          echo "Debug: Tags are ${{ steps.meta.outputs.tags }}"
+          for tag in ${{ steps.meta.outputs.tags }}; do
+            echo "Creating manifest for tag: $tag"
+            docker manifest create "$tag" \
+              "$tag-amd64" \
+              "$tag-arm64"
+            docker manifest push "$tag"
+          done
