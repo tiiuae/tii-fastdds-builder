@@ -24,11 +24,12 @@ env:
 
 jobs:
   tii-deb-build:
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         architecture: [amd64, arm64]
+    runs-on: ${{ matrix.architecture == 'amd64' && 'ubuntu-22.04' || 'ubuntu-22.04-arm' }}
     steps:
       - name: Checkout rmw_fastrtps
         uses: actions/checkout@v4
