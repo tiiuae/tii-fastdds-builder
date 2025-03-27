@@ -31,6 +31,10 @@ Keep in mind that the artifacts include both "deb" packages and "ddeb" debugsymb
 
 ### Copy and install deb packages in Dockerfile
 Modify the tag name accordingly. The baseimage is given as an example, could be used any that has the ros2 installed. If the ROS2 installation is done later, install the deb packages after the ROS2 installation.
+
+
+! Please check the artifact tag before running the command
+
 ```Dockerfile
 FROM ros:humble-ros-base
 
