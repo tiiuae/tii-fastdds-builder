@@ -119,7 +119,7 @@ jobs:
       - name: Create combined image manifests
         run: |
           echo "Debug: Tags are ${{ steps.meta.outputs.tags }}"
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          echo "${{ steps.meta.outputs.tags }}" | while read -r tag; do
             echo "Creating manifest for tag: $tag"
             docker manifest create "$tag" \
               "$tag-amd64" \
